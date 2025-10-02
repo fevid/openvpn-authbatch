@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenVPN AuthBatch</title>
+    <meta name="description" content="Add authentication to multiple OpenVPN configurations">
+    <link rel="icon" href="assets/openvpn.svg" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Lalezar&family=Noto+Sans+TC:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <div class="logo-container">
+                <img id="logo" src="assets/openvpn.svg" alt="Logo" />
+            </div>
+            
+            <h1 class="main-title rtl-target" data-i18n="main_title">OpenVPN AuthBatch</h1>
+            <p class="subtitle rtl-target" data-i18n="subtitle">Add authentication to OpenVPN configurations</p>
+        </div>
+
+        <div class="container-columns">
+            <div class="container">
+                <div class="section-title" data-i18n="config_section">Configuration</div>
+
+                <label for="fileInput" class="custom-file-upload" id="fileUploadLabel">
+                    <span class="upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10,9 9,9 8,9"/>
+                        </svg>
+                    </span>
+                    <span class="upload-text" data-i18n="choose_files">Choose files</span>
+                </label>
+                <input type="file" id="fileInput" class="hidden-input" accept=".conf, .ovpn" multiple>
+
+                <div id="fileList" class="file-list">
+                    <p class="text-center">Upload a Config to begin</p>
+                </div>
+
+                <div class="action-btns">
+                    <button id="btnAdapt" class="convert-btn">
+                        <span class="btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 18 22 12 16 6"/>
+                                <polyline points="8 6 2 12 8 18"/>
+                            </svg>
+                        </span>
+                        <span data-i18n="add_auth">Add Auth</span>
+                    </button>
+                    <button id="btnClear" class="clear-btn">
+                        <span data-i18n="clear">Clear</span>
+                    </button>
+                </div>
+
+                <div id="outputArea" class="output-area"></div>
+
+                <div class="button-container">
+                    <button id="btnDownloadAll" class="download-btn">
+                        <span class="btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                        </span>
+                        <span data-i18n="download_all">Download All</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="container2 rtl-target">
+                <div class="section-title" data-i18n="settings_section">Settings</div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title" data-i18n="advanced_options">Advanced Options</div>
+                    
+                    <button id="btnAuthToggle" class="setting-btn">
+                        <span class="btn-icon">...</span>
+                        <span data-i18n="authentication">Authentication</span>
+                    </button>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-title" data-i18n="info_title">Information</div>
+                    <div class="info-content">
+                        <p>This tool adds or updates authentication credentials to multiple OpenVPN config files.</p>
+                        <p>** This method embeds authentication within files and is not intended for sharing with unauthorized individuals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-container">
+            <a href="https://nowpayments.io/donation/fevid" target="_blank" class="donation-btn">
+                <img class="donate-img" src="assets/donate.svg" alt="Donate" />
+                <span data-i18n="donate">Support The Author</span>
+            </a>
+            <a href="https://github.com/fevid/openvpn-authbatch" target="_blank" class="donation-btn">
+                <img class="donate-img" src="assets/github.svg" alt="Github" />
+                <span>Github</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="modalAuth" class="modal-overlay">
+        <div class="modal rtl-target">
+            <div class="modal-header">
+                <h3 data-i18n="auth_title">Authentication Setup</h3>
+                <button class="modal-close" id="authClose">...</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="authUser" data-i18n="username">Username</label>
+                    <input type="text" id="authUser" data-i18n-placeholder="enter_username" placeholder="Enter username">
+                </div>
+                <div class="input-group">
+                    <label for="authPass" data-i18n="password">Password</label>
+                    <input type="password" id="authPass" data-i18n-placeholder="enter_password" placeholder="Enter password">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn ok-btn" id="authOk" data-i18n="apply">Apply</button>
+                <button class="modal-btn cancel-btn" id="authCancel" data-i18n="cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
