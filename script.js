@@ -65,11 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Adapt (add auth)
     btnAdapt.addEventListener('click', () => {
         if (filesData.length === 0) {
-            alert('Please upload at least one file.');
+            showNotification('Please upload at least one file', 'error');
             return;
         }
         if (!username || !password) {
-            alert('Please provide username and password.');
+            showNotification('Please provide username and password', 'error');
             return;
         }
 
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Download all as ZIP
     btnDownloadAll.addEventListener('click', () => {
         if (modifiedFiles.length === 0) {
-            alert('No files to download.');
+            showNotification('No files to download.', 'error');
             return;
         }
 
@@ -145,3 +145,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+function showNotification(message, type = 'success') {
+    // Remove any existing notifications first
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    });
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    // Add styles
+    Object.assign(notification.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        padding: '1rem 1.5rem',
+        borderRadius: '1rem',
+        color: 'white',
+        fontWeight: '600',
+        zIndex: '10000',
+        opacity: '0',
+        transform: 'translateX(100%)',
+        transition: 'all 0.3s ease',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(31, 38, 135, 0.37)'
+    });
+    
+    // Set background based on type
+    const backgrounds = {
+        success: 'linear-gradient(135deg, #00d4aa 0%, #00b4d8 100%)',
+        error: 'linear-gradient(135deg, #ff6b6b 0%, #c46539 100%)',
+        info: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    };
+    notification.style.background = backgrounds[type] || backgrounds.success;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 3000);
+}

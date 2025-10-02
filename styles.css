@@ -709,15 +709,3 @@ button:hover, .convert-btn:hover {
 .donate-img {
     width: 20px;
 }
-
-body.lang-zh {
-  font-family: "Noto Sans TC", sans-serif;
-}
-
-body.lang-en, body.lang-tr {
-  font-family: "Josefin Sans", sans-serif;
-}
-
-body.lang-fa {
-  font-family: "Lalezar", sans-serif;
-}
