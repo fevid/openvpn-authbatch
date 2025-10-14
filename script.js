@@ -63,53 +63,53 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Adapt (add auth)
-    btnAdapt.addEventListener('click', () => {
-        if (filesData.length === 0) {
-            showNotification('Please upload at least one file', 'error');
-            return;
+btnAdapt.addEventListener('click', () => {
+    if (filesData.length === 0) {
+        showNotification('Please upload at least one file', 'error');
+        return;
+    }
+    if (!username || !password) {
+        showNotification('Please provide username and password', 'error');
+        return;
+    }
+
+    outputArea.innerHTML = '';
+    modifiedFiles = [];
+
+    filesData.forEach((fileData) => {
+        let content = fileData.content;
+
+        // Check if <auth-user-pass> block exists and replace it
+        const authRegex = /<auth-user-pass>[\s\S]*?<\/auth-user-pass>/i;
+        const newAuth = `<auth-user-pass>\n${username}\n${password}\n</auth-user-pass>`;
+
+        if (authRegex.test(content)) {
+            // Replace existing block
+            content = content.replace(authRegex, newAuth);
+        } else {
+            // Simply append new block at the end
+            content = content.trim() + '\n\n' + newAuth;
         }
-        if (!username || !password) {
-            showNotification('Please provide username and password', 'error');
-            return;
-        }
 
-        outputArea.innerHTML = '';
-        modifiedFiles = [];
+        const modName = fileData.name.replace(/(\.conf|\.ovpn)$/, '-mod$1');
+        modifiedFiles.push({ name: modName, content });
 
-        filesData.forEach((fileData) => {
-            let content = fileData.content;
+        // Create download link for individual file
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
 
-            // Check if <auth-user-pass> block exists
-            const authRegex = /<auth-user-pass>[\s\S]*?<\/auth-user-pass>/i;
-            const newAuth = `<auth-user-pass>\n${username}\n${password}\n</auth-user-pass>`;
-
-            if (authRegex.test(content)) {
-                // Replace existing block
-                content = content.replace(authRegex, newAuth);
-            } else {
-                // Append new block
-                content += `\n${newAuth}`;
-            }
-
-            const modName = fileData.name.replace(/(\.conf|\.ovpn)$/, '-mod$1');
-            modifiedFiles.push({ name: modName, content });
-
-            // Create download link for individual file
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-
-            const div = document.createElement('div');
-            div.classList.add('output-file');
-            div.innerHTML = `
-                <span>${modName}</span>
-                <a href="${url}" download="${modName}" class="download-link">Download</a>
-            `;
-            outputArea.appendChild(div);
-        });
-
-        // Show Download All button
-        btnDownloadAll.style.display = modifiedFiles.length > 0 ? 'flex' : 'none';
+        const div = document.createElement('div');
+        div.classList.add('output-file');
+        div.innerHTML = `
+            <span>${modName}</span>
+            <a href="${url}" download="${modName}" class="download-link">Download</a>
+        `;
+        outputArea.appendChild(div);
     });
+
+    // Show Download All button
+    btnDownloadAll.style.display = modifiedFiles.length > 0 ? 'flex' : 'none';
+});
 
     // Download all as ZIP
     btnDownloadAll.addEventListener('click', () => {
