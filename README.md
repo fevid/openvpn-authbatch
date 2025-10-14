@@ -13,7 +13,7 @@ Ideal for VPN admins and users needing quick, consistent config updates.
 
 ## Usage
 
-You can use Sasha directly from GitHub Pages:  
+You can use it directly from GitHub Pages:  
 👉 [Live Demo](https://fevid.github.io/openvpn-authbatch)
 
 Alternatively, run it locally:
