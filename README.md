@@ -43,7 +43,15 @@ This method embeds authentication within files and is not intended for sharing w
 
 - [WireGuard DPI Circumvention Converter](https://github.com/fevid/wireguard-dpi-circumvention-converter)
 
+## 💸 Support
 
-<a href="https://nowpayments.io/donation?api_key=bc7f43a9-c6fe-4382-a8eb-69001c7a5fe0" target="_blank" rel="noreferrer noopener">
-    <img src="https://nowpayments.io/images/embeds/donation-button-black.svg" alt="Crypto donation button by NOWPayments">
-</a>
+Even small amounts make a difference.
+
+| Network | Address |
+| --- | --- |
+| BTC | `bc1q8clnx03a4wzcmvt0n9ntk0tj6zx22xzrq2jvhk` |
+| ETH | `0xaE5774e34635d76f0B6b9B685b99fA1827fADAEa` |
+| LTC | `ltc1qak0ptwlnp7vn76yhryq3u6mflmdcm3s0t6cj60` |
+| TON | `UQBVVcD7mRhwXlyJAD2V0OIeDh496_DHhUlMdidS4R6nvn2H` |
+| USDT/USDC (TRC20) | `TDcQTV1aJ4SPtw8sft2CvQhmMzS22gaVx1` |
+
