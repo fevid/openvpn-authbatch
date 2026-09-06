@@ -1,49 +1,49 @@
 # OpenVPN AuthBatch
 
-OpenVPN AuthBatch streamlines OpenVPN configuration management by embedding `<auth-user-pass>` blocks across multiple files.  
+OpenVPN AuthBatch streamlines OpenVPN configuration management by embedding `<auth-user-pass>` credentials across multiple `.ovpn` files in one go.
 
 ## Features
 
-- **Batch Processing**: Apply one set of credentials to multiple config files.  
-- **ZIP Download**: Get all modified files in a single ZIP with `-mod` appended to filenames.  
-- **Modern UI**: Responsive, glassmorphism-inspired design with multilingual support.  
-- **Open Source**: Built with HTML, CSS, JavaScript, and JSZip.  
+- **Batch Processing** — Apply a single set of credentials to many config files at once.
+- **Country Flag Detection** — Prefixes filenames with the matching country flag emoji (from filename tokens or remote hostname).
+- **Hostname → IP Resolution** — Resolves hostnames in `remote` lines to IPs via DNS-over-HTTPS and substitutes them in the config.
+- **ZIP Download** — Download every modified file in a single archive, each filename tagged with `-mod`.
+- **Modern UI** — Responsive, glassmorphism-inspired interface with multilingual support.
+- **Open Source** — Pure HTML, CSS, JavaScript and JSZip — no backend required.
 
-Ideal for VPN admins and users needing quick, consistent config updates.  
+Ideal for VPN administrators and power users who need fast, consistent config updates.
 
 ## Usage
 
-You can use it directly from GitHub Pages:  
-👉 [Live Demo](https://fevid.github.io/openvpn-authbatch)
+**Live**  
+👉 [https://fevid.github.io/openvpn-authbatch](https://fevid.github.io/openvpn-authbatch)
 
-Alternatively, run it locally:
+Or run it locally:
 
-1. **Clone the repo**  
+1. Clone the repository
    ```bash
    git clone https://github.com/fevid/openvpn-authbatch.git
    ```
-
-2. **Open the app**  
-   Open `index.html` in a browser.  
-
-3. **Use the tool**  
-   - Upload configs  
-   - Enter credentials  
-   - Click **"Add Auth"** to process  
-
-4. **Download results**  
-   - Get modified files individually  
-   - Or download the full ZIP archive  
+2. Open `index.html` in any modern browser.
+3. Upload one or more `.ovpn` files, enter your credentials, and click **Add Auth**.
+4. Download the results individually or as a complete ZIP archive.
 
 ## Disclaimer
 
-This method embeds authentication within files and is not intended for sharing with unauthorized individuals.
+This tool embeds authentication credentials directly inside the configuration files. Do not share the resulting files with unauthorized parties.
 
-## 🗂 Other Projects
+## Other Projects
 
 - [WireGuard DPI Circumvention Converter](https://github.com/fevid/wireguard-dpi-circumvention-converter)
 
+## 💸 Support
 
-<a href="https://nowpayments.io/donation?api_key=bc7f43a9-c6fe-4382-a8eb-69001c7a5fe0" target="_blank" rel="noreferrer noopener">
-    <img src="https://nowpayments.io/images/embeds/donation-button-black.svg" alt="Crypto donation button by NOWPayments">
-</a>
+Even small amounts make a difference.
+
+| Network | Address |
+| --- | --- |
+| BTC | `bc1q8clnx03a4wzcmvt0n9ntk0tj6zx22xzrq2jvhk` |
+| ETH | `0xaE5774e34635d76f0B6b9B685b99fA1827fADAEa` |
+| LTC | `ltc1qak0ptwlnp7vn76yhryq3u6mflmdcm3s0t6cj60` |
+| TON | `UQBVVcD7mRhwXlyJAD2V0OIeDh496_DHhUlMdidS4R6nvn2H` |
+| USDT/USDC (TRC20) | `TDcQTV1aJ4SPtw8sft2CvQhmMzS22gaVx1` |

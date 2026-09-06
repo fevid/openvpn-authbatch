@@ -82,11 +82,36 @@
 
                 <div class="settings-group">
                     <div class="settings-group-title" data-i18n="advanced_options">Advanced Options</div>
-                    
-                    <button id="btnAuthToggle" class="setting-btn">
-                        <span class="btn-icon">...</span>
-                        <span data-i18n="authentication">Authentication</span>
-                    </button>
+
+                    <label class="checkbox-field" for="chkAuthEnable">
+                        <input type="checkbox" id="chkAuthEnable" checked>
+                        <span data-i18n="enable_auth">Enable Authentication</span>
+                    </label>
+
+                    <div id="authFields" class="nested-fields">
+                        <div class="input-group">
+                            <label for="authUser" data-i18n="username">Username</label>
+                            <input type="text" id="authUser" data-i18n-placeholder="enter_username" placeholder="Enter username">
+                        </div>
+                        <div class="input-group">
+                            <label for="authPass" data-i18n="password">Password</label>
+                            <input type="password" id="authPass" data-i18n-placeholder="enter_password" placeholder="Enter password">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title" data-i18n="detection_section">Detection</div>
+
+                    <label class="checkbox-field" for="chkCountryFlag">
+                        <input type="checkbox" id="chkCountryFlag" checked>
+                        <span data-i18n="enable_country_flag">Detect country &amp; add flag</span>
+                    </label>
+
+                    <label class="checkbox-field" for="chkResolveIp">
+                        <input type="checkbox" id="chkResolveIp">
+                        <span data-i18n="enable_ip_resolve">Resolve hostname to IP</span>
+                    </label>
                 </div>
 
                 <div class="info-panel">
@@ -111,28 +136,5 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
-    <div id="modalAuth" class="modal-overlay">
-        <div class="modal rtl-target">
-            <div class="modal-header">
-                <h3 data-i18n="auth_title">Authentication Setup</h3>
-                <button class="modal-close" id="authClose">...</button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label for="authUser" data-i18n="username">Username</label>
-                    <input type="text" id="authUser" data-i18n-placeholder="enter_username" placeholder="Enter username">
-                </div>
-                <div class="input-group">
-                    <label for="authPass" data-i18n="password">Password</label>
-                    <input type="password" id="authPass" data-i18n-placeholder="enter_password" placeholder="Enter password">
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="modal-btn ok-btn" id="authOk" data-i18n="apply">Apply</button>
-                <button class="modal-btn cancel-btn" id="authCancel" data-i18n="cancel">Cancel</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
