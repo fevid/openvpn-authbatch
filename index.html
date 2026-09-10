@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenVPN AuthBatch</title>
     <meta name="description" content="OpenVPN AuthBatch is a web-based tool that simplifies adding or updating authentication credentials to multiple OpenVPN config files">
-    <link rel="icon" href="assets/openvpn.svg" type="image/x-icon">
+    <script type="text/javascript" nonce="b5b2bd9a5a5d40889ff048e4db7" src="//local.adguard.org?ts=1789053747965&amp;type=content-script&amp;dmn=prod-chat-kimi.tos-cn-beijing.volces.com&amp;url=https%3A%2F%2Fprod-chat-kimi.tos-cn-beijing.volces.com%2Fkimi-fs%2Fokc%2Fm2en6hzqybayw%2Foutput%2Findex.html%3FX-Tos-Algorithm%3DTOS4-HMAC-SHA256%26X-Tos-Credential%3DAKLTYTJlNjgwMjY2ZDBkNDFiYmI5YWNiZDBlZmFmYjIzZTA%252F20260910%252Fcn-beijing%252Ftos%252Frequest%26X-Tos-Date%3D20260910T153621Z%26X-Tos-Expires%3D518400%26X-Tos-Signature%3Df81133450f02d5fbc018d4e5319bb2ceb37fcefb19ebfb11434d143bba209a85%26X-Tos-SignedHeaders%3Dhost%26response-content-disposition%3Dattachment%253B%2Bfilename%252A%253DUTF-8%2527%2527index.html&amp;app=brave.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-loc&amp;st-dnt"></script><script type="text/javascript" nonce="b5b2bd9a5a5d40889ff048e4db7" src="//local.adguard.org?ts=1789053747965&amp;name=AdGuard%20Assistant&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><link rel="icon" href="assets/openvpn.svg" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
@@ -96,6 +96,71 @@
                         <div class="input-group">
                             <label for="authPass" data-i18n="password">Password</label>
                             <input type="password" id="authPass" data-i18n-placeholder="enter_password" placeholder="Enter password">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title" data-i18n="dns_section">DNS Overwrite</div>
+
+                    <label class="checkbox-field" for="chkDnsOverwrite">
+                        <input type="checkbox" id="chkDnsOverwrite">
+                        <span data-i18n="enable_dns_overwrite">Overwrite DNS servers</span>
+                    </label>
+
+                    <div id="dnsFields" class="nested-fields hidden">
+                        <div class="input-group">
+                            <label for="dnsProvider" data-i18n="dns_provider">DNS Provider</label>
+                            <select id="dnsProvider">
+                                <option value="google">Google (8.8.8.8, 8.8.4.4)</option>
+                                <option value="cloudflare">Cloudflare (1.1.1.1, 1.0.0.1)</option>
+                                <option value="quad9">Quad9 (9.9.9.9, 149.112.112.112)</option>
+                                <option value="opendns">OpenDNS (208.67.222.222, 208.67.220.220)</option>
+                                <option value="adguard">AdGuard (94.140.14.14, 94.140.15.15)</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div id="dnsCustomFields" class="hidden">
+                            <div class="input-group">
+                                <label for="dnsCustom1" data-i18n="primary_dns">Primary DNS</label>
+                                <input type="text" id="dnsCustom1" data-i18n-placeholder="enter_dns_ip" placeholder="e.g. 1.1.1.1">
+                            </div>
+                            <div class="input-group">
+                                <label for="dnsCustom2" data-i18n="secondary_dns">Secondary DNS</label>
+                                <input type="text" id="dnsCustom2" data-i18n-placeholder="enter_dns_ip_optional" placeholder="e.g. 1.0.0.1 (optional)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title" data-i18n="mtu_section">MTU Overwrite</div>
+
+                    <label class="checkbox-field" for="chkMtuOverwrite">
+                        <input type="checkbox" id="chkMtuOverwrite">
+                        <span data-i18n="enable_mtu_overwrite">Overwrite MTU</span>
+                    </label>
+
+                    <div id="mtuFields" class="nested-fields hidden">
+                        <div class="input-group">
+                            <label for="mtuValue" data-i18n="mtu_value">MTU Value</label>
+                            <select id="mtuValue">
+                                <option value="1500">1500 (Ethernet default)</option>
+                                <option value="1492">1492 (PPPoE)</option>
+                                <option value="1470">1470</option>
+                                <option value="1460">1460</option>
+                                <option value="1450">1450</option>
+                                <option value="1420">1420</option>
+                                <option value="1400">1400</option>
+                                <option value="1380">1380</option>
+                                <option value="1360">1360</option>
+                                <option value="1300">1300</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div id="mtuCustomField" class="input-group hidden">
+                            <label for="mtuCustom" data-i18n="custom_mtu">Custom MTU</label>
+                            <input type="number" id="mtuCustom" min="576" max="65535" data-i18n-placeholder="enter_mtu" placeholder="576 - 65535">
                         </div>
                     </div>
                 </div>

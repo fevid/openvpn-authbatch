@@ -5,6 +5,8 @@ OpenVPN AuthBatch streamlines OpenVPN configuration management by embedding `<au
 ## Features
 
 - **Batch Processing** — Apply a single set of credentials to many config files at once.
+- **DNS Overwrite** — Replace all `dhcp-option DNS` entries with servers from well-known providers (Google, Cloudflare, Quad9, OpenDNS, AdGuard) or your own custom addresses.
+- **MTU Overwrite** — Strip existing `tun-mtu` directives and set a custom MTU value from common presets or a user-defined number (576–65535).
 - **Country Flag Detection** — Prefixes filenames with the matching country flag emoji (from filename tokens or remote hostname).
 - **Hostname → IP Resolution** — Resolves hostnames in `remote` lines to IPs via DNS-over-HTTPS and substitutes them in the config.
 - **ZIP Download** — Download every modified file in a single archive, each filename tagged with `-mod`.
@@ -26,7 +28,8 @@ Or run it locally:
    ```
 2. Open `index.html` in any modern browser.
 3. Upload one or more `.ovpn` files, enter your credentials, and click **Add Auth**.
-4. Download the results individually or as a complete ZIP archive.
+4. Optionally enable **DNS Overwrite** to swap in your preferred DNS servers and **MTU Overwrite** to tune the tunnel MTU.
+5. Download the results individually or as a complete ZIP archive.
 
 ## Disclaimer
 

@@ -1,9 +1,3 @@
-// script.js
-
-// Note: This script assumes i18n is handled similarly to the example, but for simplicity, we've omitted full i18n implementation.
-// You can extend it if needed. Focus is on core functionality.
-
-// ── ISO 3166-1 alpha-2 country codes (used for flag detection) ──────────
 const COUNTRY_CODES = new Set([
     'AD','AE','AF','AG','AI','AL','AM','AO','AQ','AR','AS','AT','AU','AW','AX','AZ',
     'BA','BB','BD','BE','BF','BG','BH','BI','BJ','BL','BM','BN','BO','BQ','BR','BS','BT','BV','BW','BY','BZ',
@@ -32,14 +26,12 @@ const COUNTRY_CODES = new Set([
     'ZA','ZM','ZW'
 ]);
 
-// Convert a 2-letter country code into its flag emoji (regional indicator symbols)
 function getFlagEmoji(countryCode) {
     return [...countryCode.toUpperCase()]
         .map(char => String.fromCodePoint(127397 + char.charCodeAt(0)))
         .join('');
 }
 
-// Validate & normalize a token into an ISO country code (handles the common "UK" alias for GB)
 function normalizeCountryToken(token) {
     if (!token || token.length !== 2) return null;
     let upper = token.toUpperCase();
@@ -47,7 +39,6 @@ function normalizeCountryToken(token) {
     return COUNTRY_CODES.has(upper) ? upper : null;
 }
 
-// Try to detect a country code from the filename first, then fall back to the config's remote host(s)
 function detectCountryCode(filename, content) {
     const nameNoExt = filename.replace(/\.[^/.]+$/, '');
     const filenameTokens = nameNoExt.split(/[^a-zA-Z]+/).filter(Boolean);
@@ -68,10 +59,9 @@ function detectCountryCode(filename, content) {
     return null;
 }
 
-// ── Hostname → IP resolution (uses Google's DNS-over-HTTPS JSON API) ────
 function isIpAddress(host) {
-    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return true; // IPv4
-    if (host.includes(':') && /^[0-9a-fA-F:]+$/.test(host)) return true; // IPv6
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return true;
+    if (host.includes(':') && /^[0-9a-fA-F:]+$/.test(host)) return true;
     return false;
 }
 
@@ -111,6 +101,33 @@ async function resolveRemoteHostsToIp(content) {
     });
 }
 
+const DNS_PROVIDERS = {
+    google: ['8.8.8.8', '8.8.4.4'],
+    cloudflare: ['1.1.1.1', '1.0.0.1'],
+    quad9: ['9.9.9.9', '149.112.112.112'],
+    opendns: ['208.67.222.222', '208.67.220.220'],
+    adguard: ['94.140.14.14', '94.140.15.15']
+};
+
+function applyMtuOverwrite(content, mtu) {
+    let cleaned = content
+        .split('\n')
+        .filter(line => !/^\s*tun-mtu\s+/i.test(line))
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n');
+    return cleaned.trim() + '\n\ntun-mtu ' + mtu + '\n';
+}
+
+function applyDnsOverwrite(content, servers) {
+    let cleaned = content
+        .split('\n')
+        .filter(line => !/^\s*dhcp-option\s+DNS\s+/i.test(line))
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n');
+    const block = servers.map(ip => `dhcp-option DNS ${ip}`).join('\n');
+    return cleaned.trim() + '\n\n' + block + '\n';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('fileInput');
     const fileList = document.getElementById('fileList');
@@ -127,10 +144,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const chkCountryFlag = document.getElementById('chkCountryFlag');
     const chkResolveIp = document.getElementById('chkResolveIp');
 
+    const chkDnsOverwrite = document.getElementById('chkDnsOverwrite');
+    const dnsFields = document.getElementById('dnsFields');
+    const dnsProvider = document.getElementById('dnsProvider');
+    const dnsCustomFields = document.getElementById('dnsCustomFields');
+    const dnsCustom1 = document.getElementById('dnsCustom1');
+    const dnsCustom2 = document.getElementById('dnsCustom2');
+
+    const chkMtuOverwrite = document.getElementById('chkMtuOverwrite');
+    const mtuFields = document.getElementById('mtuFields');
+    const mtuValue = document.getElementById('mtuValue');
+    const mtuCustomField = document.getElementById('mtuCustomField');
+    const mtuCustom = document.getElementById('mtuCustom');
+
     let filesData = [];
     let modifiedFiles = [];
 
-    // Handle multiple file upload
     fileInput.addEventListener('change', (e) => {
         filesData = [];
         fileList.innerHTML = '';
@@ -147,12 +176,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Toggle inline authentication fields
     chkAuthEnable.addEventListener('change', () => {
         authFields.classList.toggle('hidden', !chkAuthEnable.checked);
     });
 
-    // Adapt (add auth / detect country / resolve IP, depending on enabled options)
+    chkDnsOverwrite.addEventListener('change', () => {
+        dnsFields.classList.toggle('hidden', !chkDnsOverwrite.checked);
+    });
+
+    dnsProvider.addEventListener('change', () => {
+        dnsCustomFields.classList.toggle('hidden', dnsProvider.value !== 'custom');
+    });
+
+    chkMtuOverwrite.addEventListener('change', () => {
+        mtuFields.classList.toggle('hidden', !chkMtuOverwrite.checked);
+    });
+
+    mtuValue.addEventListener('change', () => {
+        mtuCustomField.classList.toggle('hidden', mtuValue.value !== 'custom');
+    });
+
     btnAdapt.addEventListener('click', async () => {
         if (filesData.length === 0) {
             showNotification('Please upload at least one file', 'error');
@@ -162,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const authEnabled = chkAuthEnable.checked;
         const countryFlagEnabled = chkCountryFlag.checked;
         const resolveIpEnabled = chkResolveIp.checked;
+        const dnsOverwriteEnabled = chkDnsOverwrite.checked;
 
         const username = authUser.value.trim();
         const password = authPass.value.trim();
@@ -169,6 +213,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authEnabled && (!username || !password)) {
             showNotification('Please provide username and password', 'error');
             return;
+        }
+
+        let mtu = null;
+        if (chkMtuOverwrite.checked) {
+            if (mtuValue.value === 'custom') {
+                const customMtu = parseInt(mtuCustom.value.trim(), 10);
+                if (!customMtu || customMtu < 576 || customMtu > 65535) {
+                    showNotification('MTU must be a number between 576 and 65535', 'error');
+                    return;
+                }
+                mtu = customMtu;
+            } else {
+                mtu = parseInt(mtuValue.value, 10);
+            }
+        }
+
+        let dnsServers = [];
+        if (dnsOverwriteEnabled) {
+            const provider = dnsProvider.value;
+            if (provider === 'custom') {
+                const primary = dnsCustom1.value.trim();
+                const secondary = dnsCustom2.value.trim();
+                if (!primary && !secondary) {
+                    showNotification('Please enter at least one custom DNS server', 'error');
+                    return;
+                }
+                for (const ip of [primary, secondary]) {
+                    if (ip && !/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) {
+                        showNotification(`Invalid DNS address: ${ip}`, 'error');
+                        return;
+                    }
+                }
+                dnsServers = [primary, secondary].filter(Boolean);
+            } else {
+                dnsServers = DNS_PROVIDERS[provider];
+            }
         }
 
         outputArea.innerHTML = '';
@@ -208,6 +288,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     content = await resolveRemoteHostsToIp(content);
                 }
 
+                if (dnsOverwriteEnabled) {
+                    content = applyDnsOverwrite(content, dnsServers);
+                }
+
+                if (mtu !== null) {
+                    content = applyMtuOverwrite(content, mtu);
+                }
+
                 const modName = fileData.name.replace(/(\.conf|\.ovpn)$/, '-mod$1');
                 const outputName = flagPrefix + modName;
                 modifiedFiles.push({ name: outputName, content });
@@ -231,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Download all as ZIP
     btnDownloadAll.addEventListener('click', () => {
         if (modifiedFiles.length === 0) {
             showNotification('No files to download.', 'error');
@@ -263,25 +350,34 @@ document.addEventListener('DOMContentLoaded', () => {
         authPass.value = '';
         chkAuthEnable.checked = true;
         authFields.classList.remove('hidden');
+        chkDnsOverwrite.checked = false;
+        dnsFields.classList.add('hidden');
+        dnsProvider.value = 'google';
+        dnsCustomFields.classList.add('hidden');
+        dnsCustom1.value = '';
+        dnsCustom2.value = '';
+        chkMtuOverwrite.checked = false;
+        mtuFields.classList.add('hidden');
+        mtuValue.value = '1500';
+        mtuCustomField.classList.add('hidden');
+        mtuCustom.value = '';
         btnDownloadAll.style.display = 'none';
     });
 
 });
+
 function showNotification(message, type = 'success') {
-    // Remove any existing notifications first
     const existingNotifications = document.querySelectorAll('.notification');
     existingNotifications.forEach(notification => {
         if (notification.parentNode) {
             notification.parentNode.removeChild(notification);
         }
     });
-    
-    // Create notification element
+
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
-    
-    // Add styles
+
     Object.assign(notification.style, {
         position: 'fixed',
         top: '20px',
@@ -298,24 +394,21 @@ function showNotification(message, type = 'success') {
         border: '1px solid rgba(255, 255, 255, 0.2)',
         boxShadow: '0 8px 32px rgba(31, 38, 135, 0.37)'
     });
-    
-    // Set background based on type
+
     const backgrounds = {
         success: 'linear-gradient(135deg, #00d4aa 0%, #00b4d8 100%)',
         error: 'linear-gradient(135deg, #ff6b6b 0%, #c46539 100%)',
         info: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
     };
     notification.style.background = backgrounds[type] || backgrounds.success;
-    
+
     document.body.appendChild(notification);
-    
-    // Animate in
+
     setTimeout(() => {
         notification.style.opacity = '1';
         notification.style.transform = 'translateX(0)';
     }, 10);
-    
-    // Remove after 3 seconds
+
     setTimeout(() => {
         if (notification.parentNode) {
             notification.style.opacity = '0';
