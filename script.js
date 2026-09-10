@@ -65,18 +65,23 @@ function isIpAddress(host) {
     return false;
 }
 
+const dnsResolutionCache = new Map();
+
 async function resolveHostToIp(host) {
+    if (dnsResolutionCache.has(host)) return dnsResolutionCache.get(host);
+    let ip = null;
     try {
         const response = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`);
         const data = await response.json();
         if (data && Array.isArray(data.Answer)) {
             const aRecord = data.Answer.find(a => a.type === 1);
-            if (aRecord) return aRecord.data;
+            if (aRecord) ip = aRecord.data;
         }
     } catch (e) {
         console.error('DNS resolution failed for', host, e);
     }
-    return null;
+    dnsResolutionCache.set(host, ip);
+    return ip;
 }
 
 async function resolveRemoteHostsToIp(content) {
@@ -88,11 +93,15 @@ async function resolveRemoteHostsToIp(content) {
 
     if (hosts.size === 0) return content;
 
-    const resolvedMap = {};
-    await Promise.all([...hosts].map(async (host) => {
+    const resolvedEntries = await Promise.all([...hosts].map(async (host) => {
         const ip = await resolveHostToIp(host);
-        if (ip) resolvedMap[host] = ip;
+        return ip ? [host, ip] : null;
     }));
+
+    const resolvedMap = {};
+    for (const entry of resolvedEntries) {
+        if (entry) resolvedMap[entry[0]] = entry[1];
+    }
 
     if (Object.keys(resolvedMap).length === 0) return content;
 
@@ -109,6 +118,16 @@ const DNS_PROVIDERS = {
     adguard: ['94.140.14.14', '94.140.15.15']
 };
 
+function applyDnsOverwrite(content, servers) {
+    let cleaned = content
+        .split('\n')
+        .filter(line => !/^\s*dhcp-option\s+DNS\s+/i.test(line))
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n');
+    const block = servers.map(ip => `dhcp-option DNS ${ip}`).join('\n');
+    return cleaned.trim() + '\n\n' + block + '\n';
+}
+
 function applyMtuOverwrite(content, mtu) {
     let cleaned = content
         .split('\n')
@@ -118,14 +137,13 @@ function applyMtuOverwrite(content, mtu) {
     return cleaned.trim() + '\n\ntun-mtu ' + mtu + '\n';
 }
 
-function applyDnsOverwrite(content, servers) {
-    let cleaned = content
-        .split('\n')
-        .filter(line => !/^\s*dhcp-option\s+DNS\s+/i.test(line))
-        .join('\n')
-        .replace(/\n{3,}/g, '\n\n');
-    const block = servers.map(ip => `dhcp-option DNS ${ip}`).join('\n');
-    return cleaned.trim() + '\n\n' + block + '\n';
+function embedAuth(content, username, password) {
+    const authRegex = /<auth-user-pass>[\s\S]*?<\/auth-user-pass>/i;
+    const newAuth = `<auth-user-pass>\n${username}\n${password}\n</auth-user-pass>`;
+    if (authRegex.test(content)) {
+        return content.replace(authRegex, newAuth);
+    }
+    return content.trim() + '\n\n' + newAuth;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -159,6 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let filesData = [];
     let modifiedFiles = [];
+    let objectUrls = [];
+
+    function revokeObjectUrls() {
+        objectUrls.forEach(url => URL.revokeObjectURL(url));
+        objectUrls = [];
+    }
 
     fileInput.addEventListener('change', (e) => {
         filesData = [];
@@ -253,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         outputArea.innerHTML = '';
         modifiedFiles = [];
+        revokeObjectUrls();
 
         const originalBtnContent = btnAdapt.innerHTML;
         btnAdapt.disabled = true;
@@ -261,19 +286,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            for (const fileData of filesData) {
+            const results = await Promise.all(filesData.map(async (fileData) => {
                 const originalContent = fileData.content;
                 let content = originalContent;
 
                 if (authEnabled) {
-                    const authRegex = /<auth-user-pass>[\s\S]*?<\/auth-user-pass>/i;
-                    const newAuth = `<auth-user-pass>\n${username}\n${password}\n</auth-user-pass>`;
-
-                    if (authRegex.test(content)) {
-                        content = content.replace(authRegex, newAuth);
-                    } else {
-                        content = content.trim() + '\n\n' + newAuth;
-                    }
+                    content = embedAuth(content, username, password);
                 }
 
                 let flagPrefix = '';
@@ -297,18 +315,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const modName = fileData.name.replace(/(\.conf|\.ovpn)$/, '-mod$1');
-                const outputName = flagPrefix + modName;
-                modifiedFiles.push({ name: outputName, content });
+                return { name: flagPrefix + modName, content };
+            }));
 
-                const blob = new Blob([content], { type: 'text/plain' });
+            const usedNames = new Set();
+            for (const result of results) {
+                let outputName = result.name;
+                if (usedNames.has(outputName)) {
+                    let counter = 2;
+                    while (usedNames.has(outputName.replace(/(\.conf|\.ovpn)$/, `-${counter}$1`))) {
+                        counter++;
+                    }
+                    outputName = outputName.replace(/(\.conf|\.ovpn)$/, `-${counter}$1`);
+                }
+                usedNames.add(outputName);
+                modifiedFiles.push({ name: outputName, content: result.content });
+
+                const blob = new Blob([result.content], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
+                objectUrls.push(url);
 
                 const div = document.createElement('div');
                 div.classList.add('output-file');
-                div.innerHTML = `
-                    <span>${outputName}</span>
-                    <a href="${url}" download="${outputName}" class="download-link">Download</a>
-                `;
+
+                const span = document.createElement('span');
+                span.textContent = outputName;
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = outputName;
+                link.className = 'download-link';
+                link.textContent = 'Download';
+
+                div.appendChild(span);
+                div.appendChild(link);
                 outputArea.appendChild(div);
             }
 
@@ -346,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         outputArea.innerHTML = '';
         filesData = [];
         modifiedFiles = [];
+        revokeObjectUrls();
         authUser.value = '';
         authPass.value = '';
         chkAuthEnable.checked = true;
